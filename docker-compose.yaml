@@ -1,0 +1,14 @@
+services:
+  lb2120-agent:
+    build: .
+    container_name: lb2120-agent
+    volumes:
+      - ./config.yaml:/opt/lb2120-agent/config.yaml:ro
+      - ./volumes/state:/var/lib/lb2120-agent
+    command: ["--config", "/opt/lb2120-agent/config.yaml"]
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"  # Limit each log file to 10MB
+        max-file: "3"    # Keep only 3 log files before rotating

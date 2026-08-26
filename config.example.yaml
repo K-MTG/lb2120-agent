@@ -1,0 +1,22 @@
+lb2120:
+  device_ip: "192.168.1.1"
+  at_port: 5510
+  password: "your_lb2120_admin_password"
+
+remote_write:
+  url: "http://your-victoriametrics-host:8480/insert/<tenant>/prometheus/api/v1/write"
+
+agent:
+  poll_interval: "5m"
+  # Identifies this device in the `instance` label on every metric -- shows
+  # up as the dashboard's instance dropdown value. Customize per deployment
+  # if you run more than one LB2120.
+  instance: "lb2120"
+  job: "lb2120_agent"
+  state_file: "/var/lib/lb2120-agent/state.json"
+
+recovery:
+  confirm_polls: 2
+  cooldown: "15m"
+  max_failures: 3
+  backoff: "2h"

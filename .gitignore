@@ -1,0 +1,31 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+lb2120-agent
+lb2120-agent-linux-arm64
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDE/editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Configuration (contains the modem admin password)
+config.yaml
+
+# Runtime state (recovery bookkeeping, bind-mounted into the container)
+volumes/

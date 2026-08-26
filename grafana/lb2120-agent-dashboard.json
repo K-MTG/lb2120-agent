@@ -1,0 +1,362 @@
+{
+  "title": "LB2120 Agent",
+  "uid": "lb2120-agent",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "timezone": "browser",
+  "time": { "from": "now-24h", "to": "now" },
+  "refresh": "1m",
+  "tags": ["lb2120", "lte", "modem"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {},
+        "hide": 0,
+        "refresh": 1
+      },
+      {
+        "name": "instance",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": { "query": "label_values(lb2120_up, instance)", "refId": "instanceVariable" },
+        "current": { "text": "ch-lb2120", "value": "ch-lb2120" },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Status",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Agent Up",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_up{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Radio Functional",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_radio_functional{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "OFF (CFUN=0)", "color": "red" }, "1": { "text": "ON", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Registered",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_registered{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "red" }, "1": { "text": "YES", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Attached",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_attached{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "red" }, "1": { "text": "YES", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "WWAN Connected",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_wwan_connected{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "red" }, "1": { "text": "YES", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Roaming",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_roaming{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "green" }, "1": { "text": "YES", "color": "orange" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 2,
+      "type": "row",
+      "title": "Known-Bug Recovery",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Stuck (radio off, known bug)",
+      "description": "Distinct from WWAN Connected: this only means the specific 'CFUN stuck at 0' firmware bug is currently active, not a general loss of coverage.",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_stuck{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "green" }, "1": { "text": "STUCK", "color": "red" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Stuck Duration",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_stuck_duration_seconds{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "value" }
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Recovery Backoff Active",
+      "description": "The agent stopped auto-retrying after repeated failed recovery attempts. Needs a human.",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_recovery_backoff_active{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "green" }, "1": { "text": "NEEDS ATTENTION", "color": "red" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Recovery Attempts (24h)",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "increase(lb2120_recovery_attempts_total{instance=\"$instance\"}[24h])", "refId": "A", "instant": true }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "value" }
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Recovery Successes (24h)",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "increase(lb2120_recovery_successes_total{instance=\"$instance\"}[24h])", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "value" }
+    },
+    {
+      "id": 25,
+      "type": "stat",
+      "title": "Recovery Failures (24h)",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "increase(lb2120_recovery_failures_total{instance=\"$instance\"}[24h])", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "value" }
+    },
+    {
+      "id": 3,
+      "type": "row",
+      "title": "Signal",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "Signal Strength",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 11 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_signal_rssi_dbm{instance=\"$instance\"}", "refId": "A", "legendFormat": "RSSI (dBm)" },
+        { "expr": "lb2120_signal_rsrp_dbm{instance=\"$instance\"}", "refId": "B", "legendFormat": "RSRP (dBm)" },
+        { "expr": "lb2120_signal_rsrq_db{instance=\"$instance\"}", "refId": "C", "legendFormat": "RSRQ (dB)" },
+        { "expr": "lb2120_signal_sinr_db{instance=\"$instance\"}", "refId": "D", "legendFormat": "SINR (dB)" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "dB", "custom": { "drawStyle": "line", "spanNulls": true, "pointSize": 4 } } },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "min", "max"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "Signal Bars",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 11 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_signal_bars{instance=\"$instance\"}", "refId": "A", "legendFormat": "Bars" },
+        { "expr": "lb2120_csq_rssi_index{instance=\"$instance\"}", "refId": "B", "legendFormat": "CSQ RSSI index (0-31)" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "spanNulls": true, "pointSize": 4 }, "min": 0 } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 4,
+      "type": "row",
+      "title": "History",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 40,
+      "type": "state-timeline",
+      "title": "Connection State Over Time",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_radio_functional{instance=\"$instance\"}", "refId": "A", "legendFormat": "Radio Functional" },
+        { "expr": "lb2120_registered{instance=\"$instance\"}", "refId": "B", "legendFormat": "Registered" },
+        { "expr": "lb2120_attached{instance=\"$instance\"}", "refId": "C", "legendFormat": "Attached" },
+        { "expr": "lb2120_wwan_connected{instance=\"$instance\"}", "refId": "D", "legendFormat": "WWAN Connected" },
+        { "expr": "lb2120_stuck{instance=\"$instance\"}", "refId": "E", "legendFormat": "Stuck (known bug)" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "no", "color": "red" }, "1": { "text": "yes", "color": "green" } } }
+          ]
+        }
+      },
+      "options": { "mergeValues": true, "showValue": "never" }
+    },
+    {
+      "id": 41,
+      "type": "timeseries",
+      "title": "Recovery Actions",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "increase(lb2120_recovery_attempts_total{instance=\"$instance\"}[$__rate_interval])", "refId": "A", "legendFormat": "Attempts" },
+        { "expr": "increase(lb2120_recovery_successes_total{instance=\"$instance\"}[$__rate_interval])", "refId": "B", "legendFormat": "Successes" },
+        { "expr": "increase(lb2120_recovery_failures_total{instance=\"$instance\"}[$__rate_interval])", "refId": "C", "legendFormat": "Failures" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "fillOpacity": 60 }, "min": 0 } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "Device Info",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 28 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 50,
+      "type": "table",
+      "title": "Device / SIM / Power Info",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 29 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_info{instance=\"$instance\"}", "refId": "A", "format": "table", "instant": true },
+        { "expr": "lb2120_operator_info{instance=\"$instance\"}", "refId": "B", "format": "table", "instant": true },
+        { "expr": "lb2120_sim_status_info{instance=\"$instance\"}", "refId": "C", "format": "table", "instant": true },
+        { "expr": "lb2120_power_state_info{instance=\"$instance\"}", "refId": "D", "format": "table", "instant": true },
+        { "expr": "lb2120_reset_reason{instance=\"$instance\"}", "refId": "E", "format": "table", "instant": true },
+        { "expr": "lb2120_diagnostics_enabled{instance=\"$instance\"}", "refId": "F", "format": "table", "instant": true }
+      ],
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true } } }
+      ],
+      "options": { "showHeader": true }
+    }
+  ]
+}
