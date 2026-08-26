@@ -342,21 +342,167 @@
       "id": 50,
       "type": "table",
       "title": "Device / SIM / Power Info",
+      "description": "Joined by the instance label (not Time), since separately-executed instant queries rarely land on the exact same timestamp and won't merge otherwise. Most of these metrics always report value 1 -- their labels are the actual data -- except Reset Reason and Diagnostics Enabled, which are real values.",
       "gridPos": { "h": 6, "w": 24, "x": 0, "y": 29 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "targets": [
         { "expr": "lb2120_info{instance=\"$instance\"}", "refId": "A", "format": "table", "instant": true },
-        { "expr": "lb2120_operator_info{instance=\"$instance\"}", "refId": "B", "format": "table", "instant": true },
-        { "expr": "lb2120_sim_status_info{instance=\"$instance\"}", "refId": "C", "format": "table", "instant": true },
-        { "expr": "lb2120_power_state_info{instance=\"$instance\"}", "refId": "D", "format": "table", "instant": true },
-        { "expr": "lb2120_reset_reason{instance=\"$instance\"}", "refId": "E", "format": "table", "instant": true },
-        { "expr": "lb2120_diagnostics_enabled{instance=\"$instance\"}", "refId": "F", "format": "table", "instant": true }
+        { "expr": "lb2120_band_info{instance=\"$instance\"}", "refId": "B", "format": "table", "instant": true },
+        { "expr": "lb2120_operator_info{instance=\"$instance\"}", "refId": "C", "format": "table", "instant": true },
+        { "expr": "lb2120_sim_status_info{instance=\"$instance\"}", "refId": "D", "format": "table", "instant": true },
+        { "expr": "lb2120_power_state_info{instance=\"$instance\"}", "refId": "E", "format": "table", "instant": true },
+        { "expr": "lb2120_reset_reason{instance=\"$instance\"}", "refId": "F", "format": "table", "instant": true },
+        { "expr": "lb2120_diagnostics_enabled{instance=\"$instance\"}", "refId": "G", "format": "table", "instant": true }
       ],
       "transformations": [
-        { "id": "merge", "options": {} },
-        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true } } }
+        { "id": "joinByField", "options": { "byField": "instance", "mode": "outer" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "Value #A": true,
+              "Value #B": true,
+              "Value #C": true,
+              "Value #D": true,
+              "Value #E": true
+            },
+            "renameByName": {
+              "band": "LTE Band",
+              "operator": "Operator",
+              "status": "SIM Status",
+              "pmstate": "Power State",
+              "smstate": "Sm State",
+              "model": "Model",
+              "manufacturer": "Manufacturer",
+              "fw_version": "Firmware",
+              "hw_version": "Hardware Rev",
+              "Value #F": "Reset Reason",
+              "Value #G": "Diagnostics Enabled"
+            }
+          }
+        }
       ],
       "options": { "showHeader": true }
+    },
+    {
+      "id": 6,
+      "type": "row",
+      "title": "Radio Detail",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 35 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 60,
+      "type": "stat",
+      "title": "Cell ID",
+      "description": "4294967295 (0xFFFFFFFF) means not registered to any cell -- this was the key signal during original diagnosis of the stuck-radio bug.",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_cell_id{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "4294967295": { "text": "No Cell (Unregistered)", "color": "red" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 4294967295 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "value" }
+    },
+    {
+      "id": 61,
+      "type": "timeseries",
+      "title": "Radio Quality",
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_radio_quality{instance=\"$instance\"}", "refId": "A", "legendFormat": "Radio Quality" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "spanNulls": true, "pointSize": 4 }, "min": 0 } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 7,
+      "type": "row",
+      "title": "Device Health",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 70,
+      "type": "stat",
+      "title": "Device Temperature",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 45 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_device_temperature_celsius{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 45 }, { "color": "red", "value": 55 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "value" }
+    },
+    {
+      "id": 71,
+      "type": "stat",
+      "title": "Device Temp Critical",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 45 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_device_temp_critical{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NO", "color": "green" }, "1": { "text": "CRITICAL", "color": "red" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "Data Usage",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 80,
+      "type": "timeseries",
+      "title": "Daily Data Usage",
+      "description": "increase() over a 1-day window, which correctly handles the counter reset when the billing cycle rolls over.",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 50 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "increase(lb2120_data_transferred_bytes{instance=\"$instance\"}[1d])", "refId": "A", "legendFormat": "Daily Usage" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "bars", "fillOpacity": 60 }, "min": 0 } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 81,
+      "type": "stat",
+      "title": "Total Transferred (this cycle)",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 50 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        { "expr": "lb2120_data_transferred_bytes{instance=\"$instance\"}", "refId": "A", "instant": true }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value", "colorMode": "value" }
     }
   ]
 }

@@ -67,10 +67,23 @@ func Build(snap Snapshot) []remotewrite.Sample {
 			"smstate": m.Power.SmState,
 		}))
 		out = append(out, gauge("lb2120_reset_reason", float64(m.Power.ResetReason), noLabels))
+		out = append(out, gauge("lb2120_device_temperature_celsius", m.General.DevTemperature, noLabels))
+		out = append(out, gauge("lb2120_device_temp_critical", b2f(m.Power.DeviceTempCritical), noLabels))
+		out = append(out, gauge("lb2120_cell_id", m.WWANAdv.CellID, noLabels))
+		out = append(out, gauge("lb2120_radio_quality", m.WWANAdv.RadioQuality, noLabels))
+		// Cumulative within the billing cycle (resets when it rolls over);
+		// use increase()/delta() over a window in Grafana for usage-per-
+		// period views. increase() handles the cycle-reset drop correctly.
+		out = append(out, gauge("lb2120_data_transferred_bytes", m.WWAN.DataUsage.Generic.DataTransferred, noLabels))
 		out = append(out, gauge("lb2120_sim_status_info", 1, map[string]string{
 			"status": m.SIM.Status,
 		}))
 		out = append(out, gauge("lb2120_diagnostics_enabled", b2f(m.Custom.AtTcpEnable), noLabels))
+		if m.WWANAdv.CurBand != "" {
+			out = append(out, gauge("lb2120_band_info", 1, map[string]string{
+				"band": m.WWANAdv.CurBand,
+			}))
+		}
 		out = append(out, gauge("lb2120_info", 1, map[string]string{
 			"model":        m.General.Model,
 			"fw_version":   m.General.FWversion,

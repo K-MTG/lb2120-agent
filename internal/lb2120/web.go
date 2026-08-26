@@ -3,8 +3,10 @@ package lb2120
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
@@ -20,11 +22,12 @@ var reToken = regexp.MustCompile(`name="token"\s+value="([^"]*)"`)
 // monitoring. Unknown fields are ignored by encoding/json.
 type Model struct {
 	General struct {
-		Manufacturer    string `json:"manufacturer"`
-		Model           string `json:"model"`
-		FWversion       string `json:"FWversion"`
-		HWversion       string `json:"HWversion"`
-		IMEI            string `json:"IMEI"`
+		Manufacturer    string  `json:"manufacturer"`
+		Model           string  `json:"model"`
+		FWversion       string  `json:"FWversion"`
+		HWversion       string  `json:"HWversion"`
+		IMEI            string  `json:"IMEI"`
+		DevTemperature  float64 `json:"devTemperature"`
 		SystemAlertList []struct {
 			Description string `json:"description"`
 			Active      string `json:"active"`
@@ -33,9 +36,10 @@ type Model struct {
 		} `json:"systemAlertList"`
 	} `json:"general"`
 	Power struct {
-		PMState     string `json:"PMState"`
-		SmState     string `json:"SmState"`
-		ResetReason int    `json:"resetreason"`
+		PMState            string `json:"PMState"`
+		SmState            string `json:"SmState"`
+		ResetReason        int    `json:"resetreason"`
+		DeviceTempCritical bool   `json:"deviceTempCritical"`
 	} `json:"power"`
 	WWAN struct {
 		Connection             string `json:"connection"`
@@ -52,7 +56,17 @@ type Model struct {
 			SINR float64 `json:"sinr"`
 			Bars float64 `json:"bars"`
 		} `json:"signalStrength"`
+		DataUsage struct {
+			Generic struct {
+				DataTransferred float64 `json:"dataTransferred"`
+			} `json:"generic"`
+		} `json:"dataUsage"`
 	} `json:"wwan"`
+	WWANAdv struct {
+		CurBand      string  `json:"curBand"`
+		RadioQuality float64 `json:"radioQuality"`
+		CellID       float64 `json:"cellId"`
+	} `json:"wwanadv"`
 	SIM struct {
 		Status string `json:"status"`
 	} `json:"sim"`
@@ -177,7 +191,18 @@ func (c *WebClient) FetchModel(ctx context.Context) (*Model, error) {
 
 	var model Model
 	if err := json.Unmarshal(body, &model); err != nil {
-		return nil, fmt.Errorf("parse model.json (session likely not authenticated): %w", err)
+		// This device has been observed sending some numeric-looking
+		// fields as JSON strings inconsistently across firmware/fields.
+		// A type mismatch on one field doesn't stop encoding/json from
+		// populating the rest of the object, so don't discard an entire
+		// cycle's worth of otherwise-good data over it -- only a
+		// structurally invalid body (e.g. an HTML login page, meaning
+		// the session wasn't actually authenticated) is fatal.
+		var typeErr *json.UnmarshalTypeError
+		if !errors.As(err, &typeErr) {
+			return nil, fmt.Errorf("parse model.json (session likely not authenticated): %w", err)
+		}
+		slog.Warn("model.json had a field type mismatch, continuing with partial data", "field", typeErr.Field, "error", err)
 	}
 	return &model, nil
 }

@@ -94,6 +94,11 @@ All metrics carry `job` and `instance` labels (from `agent.job` / `agent.instanc
 | `lb2120_recovery_backoff_active` | Agent has given up retrying for now and needs a human |
 | `lb2120_reset_reason` | The modem's own `power.resetreason` value |
 | `lb2120_info` | Static info (model, firmware/hardware version) as labels |
+| `lb2120_band_info` | Current LTE band (e.g. `LTE B2`) as a label |
+| `lb2120_cell_id` | Serving cell ID. `4294967295` (`0xFFFFFFFF`) means not registered to any cell — this was the key signal during the original diagnosis of the stuck-radio bug |
+| `lb2120_radio_quality` | Composite radio quality score from `wwanadv.radioQuality`, distinct from RSRP/RSRQ/SINR |
+| `lb2120_device_temperature_celsius` / `lb2120_device_temp_critical` | Modem chip temperature and the device's own over-temperature flag |
+| `lb2120_data_transferred_bytes` | Cumulative data transferred within the current billing cycle (resets when it rolls over) — use `increase()`/`delta()` over a window for per-day usage views; `increase()` handles the cycle-reset drop correctly |
 
 Grafana alerting isn't set up by this project — wire up alerts on top of these once they're
 flowing into your TSDB (e.g. alert on `lb2120_wwan_connected == 0` for real outages, and

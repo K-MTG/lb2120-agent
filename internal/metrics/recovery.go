@@ -27,15 +27,6 @@ type Config struct {
 	BackoffDuration time.Duration
 }
 
-func DefaultConfig() Config {
-	return Config{
-		ConfirmPolls:           2,
-		Cooldown:               15 * time.Minute,
-		MaxConsecutiveFailures: 3,
-		BackoffDuration:        2 * time.Hour,
-	}
-}
-
 // State is the recovery state machine's persisted state. It's small enough
 // to serialize as-is; persisting it means a service restart mid-backoff
 // doesn't forget the failure streak and start hammering the modem again.
@@ -137,10 +128,4 @@ func (s *State) recordOutcome(succeeded bool, now time.Time) {
 		s.BackoffUntil = now.Add(s.Cfg.BackoffDuration)
 		s.ConsecutiveFailedAttempts = 0
 	}
-}
-
-// InBackoff reports whether the agent is currently withholding recovery
-// attempts due to repeated failures.
-func (s *State) InBackoff(now time.Time) bool {
-	return now.Before(s.BackoffUntil)
 }
