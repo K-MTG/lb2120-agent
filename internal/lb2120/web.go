@@ -1,6 +1,7 @@
 package lb2120
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -98,8 +99,12 @@ func NewWebClient(baseURL, password string, timeout time.Duration) (*WebClient, 
 
 // login fetches the CSRF token and posts the admin password. It returns an
 // error if the device rejects the login (e.g. wrong password).
-func (c *WebClient) login() error {
-	resp, err := c.HTTPClient.Get(c.BaseURL + "/index.html")
+func (c *WebClient) login(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+"/index.html", nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("fetch login page: %w", err)
 	}
@@ -122,6 +127,12 @@ func (c *WebClient) login() error {
 		"err_redirect":     {"/index.html"},
 	}
 
+	loginReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+"/Forms/config", strings.NewReader(form.Encode()))
+	if err != nil {
+		return err
+	}
+	loginReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 	// Don't auto-follow this redirect: the Location header's errno query
 	// param tells us whether the login was accepted.
 	noRedirect := *c.HTTPClient
@@ -129,7 +140,7 @@ func (c *WebClient) login() error {
 		return http.ErrUseLastResponse
 	}
 
-	loginResp, err := noRedirect.PostForm(c.BaseURL+"/Forms/config", form)
+	loginResp, err := noRedirect.Do(loginReq)
 	if err != nil {
 		return fmt.Errorf("post login: %w", err)
 	}
@@ -143,13 +154,17 @@ func (c *WebClient) login() error {
 }
 
 // FetchModel logs in and retrieves the current model.json snapshot.
-func (c *WebClient) FetchModel() (*Model, error) {
-	if err := c.login(); err != nil {
+func (c *WebClient) FetchModel(ctx context.Context) (*Model, error) {
+	if err := c.login(ctx); err != nil {
 		return nil, err
 	}
 
 	apiURL := fmt.Sprintf("%s/api/model.json?internalapi=1&x=%d", c.BaseURL, rand.Intn(100000))
-	resp, err := c.HTTPClient.Get(apiURL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch model.json: %w", err)
 	}

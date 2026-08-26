@@ -6,20 +6,26 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
-	"lb2120-agent/internal/lb2120"
-	"lb2120-agent/internal/metrics"
-	"lb2120-agent/internal/remotewrite"
+	"github.com/K-MTG/lb2120-agent/internal/lb2120"
+	"github.com/K-MTG/lb2120-agent/internal/metrics"
+	"github.com/K-MTG/lb2120-agent/internal/remotewrite"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	cfg, err := parseConfig()
 	if err != nil {
@@ -55,20 +61,27 @@ func main() {
 		"remote_write_url", cfg.RemoteWriteURL,
 	)
 
-	runOnce(cfg, atAddr, webBase, state, rwClient)
+	runOnce(ctx, cfg, atAddr, webBase, state, rwClient)
 
 	ticker := time.NewTicker(cfg.PollInterval)
 	defer ticker.Stop()
-	for range ticker.C {
-		runOnce(cfg, atAddr, webBase, state, rwClient)
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		case <-ticker.C:
+			runOnce(ctx, cfg, atAddr, webBase, state, rwClient)
+		}
 	}
+	slog.Info("lb2120-agent shutting down")
 }
 
-func runOnce(cfg Config, atAddr, webBase string, state *metrics.State, rw *remotewrite.Client) {
+func runOnce(ctx context.Context, cfg Config, atAddr, webBase string, state *metrics.State, rw *remotewrite.Client) {
 	start := time.Now()
 	log := slog.With("cycle_start", start.Format(time.RFC3339))
 
-	atStatus, atErr := lb2120.QueryStatus(atAddr, cfg.ATTimeout)
+	atStatus, atErr := lb2120.QueryStatus(ctx, atAddr, cfg.ATTimeout)
 	if atErr != nil {
 		log.Error("AT status query failed", "error", atErr)
 	}
@@ -76,7 +89,7 @@ func runOnce(cfg Config, atAddr, webBase string, state *metrics.State, rw *remot
 	webClient, webErr := lb2120.NewWebClient(webBase, cfg.Password, cfg.WebTimeout)
 	var model *lb2120.Model
 	if webErr == nil {
-		model, webErr = webClient.FetchModel()
+		model, webErr = webClient.FetchModel(ctx)
 	}
 	if webErr != nil {
 		log.Warn("web API fetch failed (metrics will be AT-only this cycle)", "error", webErr)
@@ -92,7 +105,7 @@ func runOnce(cfg Config, atAddr, webBase string, state *metrics.State, rw *remot
 	log.Info("recovery evaluation", "stuck", stuck, "attempt", decision.Attempt, "reason", decision.Reason, "in_backoff", decision.InBackoff)
 
 	if decision.Attempt {
-		if err := lb2120.Recover(atAddr, cfg.ATTimeout); err != nil {
+		if err := lb2120.Recover(ctx, atAddr, cfg.ATTimeout); err != nil {
 			log.Error("recovery command failed to send", "error", err)
 		} else {
 			log.Warn("sent AT+CFUN=1 to recover stuck radio")
@@ -120,7 +133,7 @@ func runOnce(cfg Config, atAddr, webBase string, state *metrics.State, rw *remot
 	}
 	samples := metrics.Build(snap)
 
-	if err := rw.Push(samples, start); err != nil {
+	if err := rw.Push(ctx, samples, start); err != nil {
 		log.Error("remote_write push failed", "error", err, "sample_count", len(samples))
 		return
 	}

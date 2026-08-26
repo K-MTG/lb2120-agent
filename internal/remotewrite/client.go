@@ -8,6 +8,7 @@ package remotewrite
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -90,7 +91,7 @@ func encodeWriteRequest(seriesList [][]byte) []byte {
 
 // Push encodes and sends the given samples, all at timestamp ts, as a single
 // remote_write request.
-func (c *Client) Push(samples []Sample, ts time.Time) error {
+func (c *Client) Push(ctx context.Context, samples []Sample, ts time.Time) error {
 	tsMillis := ts.UnixMilli()
 	series := make([][]byte, 0, len(samples))
 
@@ -109,7 +110,7 @@ func (c *Client) Push(samples []Sample, ts time.Time) error {
 	payload := encodeWriteRequest(series)
 	compressed := snappy.Encode(nil, payload)
 
-	req, err := http.NewRequest(http.MethodPost, c.URL, bytes.NewReader(compressed))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.URL, bytes.NewReader(compressed))
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
 	}

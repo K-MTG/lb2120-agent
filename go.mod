@@ -1,4 +1,4 @@
-module lb2120-agent
+module github.com/K-MTG/lb2120-agent
 
 go 1.24.3
 

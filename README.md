@@ -121,7 +121,7 @@ docker compose up -d
 To deploy on a remote host, clone the repo there directly and set up `config.yaml` the same way:
 
 ```sh
-git clone https://github.com/<you>/lb2120-agent.git
+git clone https://github.com/K-MTG/lb2120-agent.git
 cd lb2120-agent
 cp config.example.yaml config.yaml   # then edit in your real values
 docker compose up -d

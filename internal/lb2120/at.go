@@ -4,6 +4,7 @@ package lb2120
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net"
 	"regexp"
@@ -66,10 +67,10 @@ func sendAT(conn net.Conn, cmd string, overall time.Duration) (string, error) {
 
 // QueryStatus opens a fresh connection to the AT interface and reads the
 // registration/signal state relevant to diagnosing and monitoring the modem.
-func QueryStatus(addr string, timeout time.Duration) (ATStatus, error) {
+func QueryStatus(ctx context.Context, addr string, timeout time.Duration) (ATStatus, error) {
 	var st ATStatus
 
-	conn, err := net.DialTimeout("tcp", addr, timeout)
+	conn, err := (&net.Dialer{Timeout: timeout}).DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return st, fmt.Errorf("dial %s: %w", addr, err)
 	}
@@ -137,8 +138,8 @@ func QueryStatus(addr string, timeout time.Duration) (ATStatus, error) {
 // Recover sends AT+CFUN=1 (radio on, no reset) which is the command that
 // reliably clears the "stuck in low power mode" state; AT+CFUN=1,1 (full
 // reset) was observed NOT to reliably clear it.
-func Recover(addr string, timeout time.Duration) error {
-	conn, err := net.DialTimeout("tcp", addr, timeout)
+func Recover(ctx context.Context, addr string, timeout time.Duration) error {
+	conn, err := (&net.Dialer{Timeout: timeout}).DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return fmt.Errorf("dial %s: %w", addr, err)
 	}

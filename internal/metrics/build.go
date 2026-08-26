@@ -3,8 +3,8 @@ package metrics
 import (
 	"time"
 
-	"lb2120-agent/internal/lb2120"
-	"lb2120-agent/internal/remotewrite"
+	"github.com/K-MTG/lb2120-agent/internal/lb2120"
+	"github.com/K-MTG/lb2120-agent/internal/remotewrite"
 )
 
 // Snapshot is everything one poll cycle learned, used to build the sample
