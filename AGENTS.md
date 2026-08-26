@@ -32,6 +32,24 @@ Context for AI coding agents working in this repo. See `README.md` for user-faci
 - `agent.instance` in `config.yaml` is the per-deployment identifier and shows up as the Grafana
   dashboard's instance dropdown value — keep it stable once a dashboard/alerts reference it.
 
+## Device data quirks (don't misread these)
+
+Observed across two independent physical units (different locations, different install dates),
+which is what makes these worth trusting rather than one-off noise:
+
+- **`lb2120_reset_reason` reads `16` on both units, including one enabled fresh the same day.**
+  This is very likely just this firmware's default/steady-state boot code, not a fault or
+  power-loss indicator — despite the name. Don't treat a `16` reading as evidence of a power event;
+  only a *change* in this value across a reboot would be worth investigating.
+- **`lb2120_signal_sinr_db` reads `0` on both units, always.** This chipset/firmware doesn't
+  populate SINR — it's not a real "0 dB" measurement. Don't alert on it or trust it in a panel.
+- **`power_state_info`'s `pmstate` label is not the health signal — `smstate` is.** `pmstate` has
+  been observed as both `"LowPower"` (steady-state on a long-running unit) and `"Init"` (a
+  freshly-enabled unit), neither of which means anything is wrong. `smstate: "Online"` is healthy;
+  `smstate: "LowPowerMode"` is the stuck-radio bug. The recovery trigger in code already only uses
+  AT's `CFUN` for this reason (see above) — this note is for anyone tempted to add web-API-based
+  alerting on top of `pmstate`.
+
 ## Go version
 
 Both `go.mod` and the Dockerfile's builder image tag (`golang:X.Y.Z-bookworm`) should be bumped
