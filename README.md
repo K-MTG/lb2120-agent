@@ -32,10 +32,11 @@ sequenceDiagram
         Agent->>Web: GET /api/model.json
         Web-->>Agent: signal detail, SIM, power state, alerts
 
-        alt CFUN == 0, confirmed across confirm_polls, cooldown elapsed, not in backoff
+        alt radio stuck off, confirmed, cooldown elapsed, not in backoff
             Agent->>AT: dial + AT+CFUN=1
             AT-->>Agent: OK
-            Note over Agent: recovery attempt recorded;<br/>never triggered by "no signal" alone
+            Note over Agent: recovery attempt recorded
+            Note over Agent: never triggered by no-signal alone
         end
 
         Agent->>VM: remote_write push (protobuf + snappy, persistent connection)
