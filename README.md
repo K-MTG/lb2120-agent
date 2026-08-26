@@ -9,7 +9,7 @@ device's own full-reset command (`AT+CFUN=1,1`) does not.
 
 ## Why this exists
 
-This LB2120 serves as an LTE WAN failover link behind a UniFi gateway. The stuck-radio bug was
+This LB2120 serves as an LTE WAN failover link. The stuck-radio bug was
 reproduced twice: once after a manual `AT+CFUN=1,1` reset, and again after a plain device reboot
 (triggered by toggling the web UI's Diagnostics setting) — both times with continuous, hardwired
 power the whole time, which rules out an actual power-loss event. The device is EOL/unsupported,

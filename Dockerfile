@@ -1,5 +1,5 @@
 # Stage 1: Build the Go binary
-FROM golang:1.25.4-bookworm AS builder
+FROM golang:1.27.0-bookworm AS builder
 
 WORKDIR /app
 
