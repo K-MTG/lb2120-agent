@@ -7,6 +7,41 @@ stuck administratively powered off (`AT+CFUN=0`, reported via the web UI as `PMS
 `SmState: LowPowerMode`) and never recovers on its own. `AT+CFUN=1` reliably clears it; the
 device's own full-reset command (`AT+CFUN=1,1`) does not.
 
+## How it works
+
+Each poll cycle opens fresh connections to the modem (no session/connection reuse between
+cycles — see [AGENTS.md](AGENTS.md) for why) and pushes one batch of metrics regardless of what
+it found:
+
+```mermaid
+sequenceDiagram
+    participant Agent as lb2120-agent
+    participant AT as LB2120 AT interface (:5510)
+    participant Web as LB2120 web API (:80)
+    participant VM as remote_write endpoint
+
+    loop every poll_interval (default 5m)
+        Agent->>AT: dial + AT+CFUN? / CSQ / CREG? / CEREG? / CGATT? / COPS? / CBC
+        AT-->>Agent: radio + registration + signal state
+        Agent->>AT: close connection
+
+        Agent->>Web: GET /index.html (fresh login every cycle)
+        Web-->>Agent: CSRF token + session cookie
+        Agent->>Web: POST /Forms/config (session.password + token)
+        Web-->>Agent: session accepted
+        Agent->>Web: GET /api/model.json
+        Web-->>Agent: signal detail, SIM, power state, alerts
+
+        alt CFUN == 0, confirmed across confirm_polls, cooldown elapsed, not in backoff
+            Agent->>AT: dial + AT+CFUN=1
+            AT-->>Agent: OK
+            Note over Agent: recovery attempt recorded;<br/>never triggered by "no signal" alone
+        end
+
+        Agent->>VM: remote_write push (protobuf + snappy, persistent connection)
+    end
+```
+
 ## Why this exists
 
 This LB2120 serves as an LTE WAN failover link. The stuck-radio bug was
